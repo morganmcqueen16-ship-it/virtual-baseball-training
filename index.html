@@ -8,10 +8,11 @@
   <style>
     :root {
       --navy: #0a2a43;
-      --red: #c62828;
-      --light: #f7f7f7;
+      --green: #0a4d29;       /* Dark green */
+      --light: #f4f6f4;
       --white: #ffffff;
       --gray: #dddddd;
+      --accent: #1b8a5a;      /* Lighter green accent */
     }
 
     body {
@@ -30,6 +31,7 @@
       box-shadow: 0 5px 18px rgba(0,0,0,0.10);
     }
 
+    /* ----- TITLE BAR ----- */
     .title-bar {
       background: var(--navy);
       color: var(--white);
@@ -37,15 +39,27 @@
       text-align: center;
       border-radius: 12px;
       margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
     }
 
     .title-bar h1 {
       margin: 0;
-      font-size: 1.9rem;
+      font-size: 1.8rem;
       text-transform: uppercase;
       letter-spacing: 1px;
     }
 
+    .logo {
+      height: 50px;
+      width: 50px;
+      object-fit: contain;
+      filter: drop-shadow(0px 0px 3px rgba(0,0,0,0.2));
+    }
+
+    /* ----- PLAYER LIST ----- */
     .player-list {
       display: flex;
       flex-wrap: wrap;
@@ -56,33 +70,35 @@
     .player-button {
       padding: 10px 16px;
       border-radius: 999px;
-      border: 2px solid var(--navy);
+      border: 2px solid var(--green);
       cursor: pointer;
       background: var(--white);
       font-weight: 600;
-      color: var(--navy);
+      color: var(--green);
       transition: 0.15s ease-in-out;
     }
 
     .player-button:hover {
-      background: var(--navy);
+      background: var(--green);
       color: var(--white);
     }
 
     .player-button.active {
-      background: var(--red);
+      background: var(--navy);
       color: var(--white);
-      border-color: var(--red);
+      border-color: var(--navy);
     }
 
+    /* ----- SECTIONS ----- */
     .section {
       margin-bottom: 30px;
     }
 
     .section h3 {
       color: var(--navy);
-      border-left: 5px solid var(--red);
-      padding-left: 10px;
+      border-left: 6px solid var(--green);
+      padding-left: 12px;
+      font-size: 1.2rem;
     }
 
     .video-card {
@@ -105,19 +121,20 @@
 
   <div class="app-container">
 
-    <!-- Title -->
+    <!-- Title with Logo -->
     <div class="title-bar">
+      <img src="https://cdn-icons-png.flaticon.com/512/826/826956.png" class="logo" alt="Baseball Logo">
       <h1>Virtual Baseball Training</h1>
     </div>
 
-    <p>Select your name to view your assigned training videos.</p>
+    <p>Select your name to view training videos.</p>
 
     <!-- Player list -->
     <div id="player-list" class="player-list"></div>
 
     <!-- Player details -->
     <div id="player-detail" style="display: none;">
-      <h2 id="player-name" style="color: var(--red);"></h2>
+      <h2 id="player-name" style="color: var(--green);"></h2>
 
       <div class="section">
         <h3>Pitching</h3>
@@ -138,12 +155,11 @@
         <h3>Fielding</h3>
         <div id="fielding-videos"></div>
       </div>
-
     </div>
   </div>
 
   <script>
-    /* ===== PLAYER DATA — CUSTOMIZE THIS WITH YOUR ROSTER ===== */
+    /* ===== PLAYER DATA — ADD YOUR REAL TEAM HERE ===== */
     const players = [
       {
         id: "alex-johnson",
@@ -168,4 +184,54 @@
     ];
 
     /* ===== MAIN APP LOGIC ===== */
-    const
+    const playerListEl = document.getElementById("player-list");
+    const playerDetailEl = document.getElementById("player-detail");
+    const playerNameEl = document.getElementById("player-name");
+
+    const pitchingEl = document.getElementById("pitching-videos");
+    const catchingEl = document.getElementById("catching-videos");
+    const hittingEl = document.getElementById("hitting-videos");
+    const fieldingEl = document.getElementById("fielding-videos");
+
+    let activePlayer = null;
+
+    function renderPlayers() {
+      playerListEl.innerHTML = "";
+      players.forEach(p => {
+        const btn = document.createElement("button");
+        btn.textContent = p.name;
+        btn.className = "player-button";
+        btn.onclick = () => selectPlayer(p.id);
+        playerListEl.appendChild(btn);
+      });
+    }
+
+    function selectPlayer(id) {
+      activePlayer = players.find(p => p.id === id);
+      playerNameEl.textContent = activePlayer.name;
+
+      document.querySelectorAll(".player-button").forEach(btn => {
+        btn.classList.toggle("active", btn.textContent === activePlayer.name);
+      });
+
+      renderSection(pitchingEl, activePlayer.videos.pitching);
+      renderSection(catchingEl, activePlayer.videos.catching);
+      renderSection(hittingEl, activePlayer.videos.hitting);
+      renderSection(fieldingEl, activePlayer.videos.fielding);
+
+      playerDetailEl.style.display = "block";
+      playerDetailEl.scrollIntoView({ behavior: "smooth" });
+    }
+
+    function renderSection(container, videos) {
+      container.innerHTML = "";
+      if (!videos.length) {
+        container.innerHTML = "<i>No videos assigned.</i>";
+        return;
+      }
+      videos.forEach(v => {
+        const card = document.createElement("div");
+        card.className = "video-card";
+        card.innerHTML = `<p><b>${v.title}</b></p><iframe src="${v.url}" allowfullscreen></iframe>`;
+        container.appendChild(card);
+      });
