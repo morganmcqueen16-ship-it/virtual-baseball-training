@@ -2,83 +2,122 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Team Training Hub</title>
+  <title>Virtual Baseball Training</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <style>
+    :root {
+      --navy: #0a2a43;
+      --red: #c62828;
+      --light: #f7f7f7;
+      --white: #ffffff;
+      --gray: #dddddd;
+    }
+
     body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       margin: 0;
-      padding: 16px;
-    }
-
-    h1, h2, h3 {
-      margin-top: 0;
+      padding: 0;
+      background: var(--light);
     }
 
     .app-container {
       max-width: 900px;
-      margin: 0 auto;
+      margin: 20px auto;
+      background: var(--white);
+      padding: 20px;
+      border-radius: 14px;
+      box-shadow: 0 5px 18px rgba(0,0,0,0.10);
+    }
+
+    .title-bar {
+      background: var(--navy);
+      color: var(--white);
+      padding: 18px;
+      text-align: center;
+      border-radius: 12px;
+      margin-bottom: 20px;
+    }
+
+    .title-bar h1 {
+      margin: 0;
+      font-size: 1.9rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
     }
 
     .player-list {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
-      margin-bottom: 24px;
+      gap: 10px;
+      margin-bottom: 20px;
     }
 
     .player-button {
       padding: 10px 16px;
       border-radius: 999px;
-      border: 1px solid #ccc;
+      border: 2px solid var(--navy);
       cursor: pointer;
-      font-size: 0.95rem;
-      background: #f8f8f8;
+      background: var(--white);
+      font-weight: 600;
+      color: var(--navy);
+      transition: 0.15s ease-in-out;
+    }
+
+    .player-button:hover {
+      background: var(--navy);
+      color: var(--white);
     }
 
     .player-button.active {
-      border-width: 2px;
-      font-weight: 600;
-    }
-
-    .player-detail {
-      border-top: 1px solid #ddd;
-      padding-top: 16px;
+      background: var(--red);
+      color: var(--white);
+      border-color: var(--red);
     }
 
     .section {
-      margin-bottom: 24px;
+      margin-bottom: 30px;
+    }
+
+    .section h3 {
+      color: var(--navy);
+      border-left: 5px solid var(--red);
+      padding-left: 10px;
     }
 
     .video-card {
-      margin-bottom: 16px;
+      background: var(--light);
+      padding: 12px;
+      border-radius: 10px;
+      margin-bottom: 15px;
+      border: 1px solid var(--gray);
     }
 
     iframe {
       width: 100%;
       aspect-ratio: 16 / 9;
       border: none;
-    }
-
-    .no-videos {
-      font-size: 0.9rem;
-      font-style: italic;
-      color: #666;
+      border-radius: 10px;
     }
   </style>
 </head>
 <body>
+
   <div class="app-container">
-    <h1>Team Training Hub</h1>
-    <p>Select your name to view your training videos.</p>
+
+    <!-- Title -->
+    <div class="title-bar">
+      <h1>Virtual Baseball Training</h1>
+    </div>
+
+    <p>Select your name to view your assigned training videos.</p>
 
     <!-- Player list -->
     <div id="player-list" class="player-list"></div>
 
     <!-- Player details -->
-    <div id="player-detail" class="player-detail" style="display: none;">
-      <h2 id="player-name"></h2>
+    <div id="player-detail" style="display: none;">
+      <h2 id="player-name" style="color: var(--red);"></h2>
 
       <div class="section">
         <h3>Pitching</h3>
@@ -99,128 +138,34 @@
         <h3>Fielding</h3>
         <div id="fielding-videos"></div>
       </div>
+
     </div>
   </div>
 
   <script>
-    // ====== DATA: EDIT THIS PART FOR YOUR REAL TEAM ======
+    /* ===== PLAYER DATA — CUSTOMIZE THIS WITH YOUR ROSTER ===== */
     const players = [
       {
         id: "alex-johnson",
         name: "Alex Johnson",
         videos: {
-          pitching: [
-            { title: "Pitching Drill 1", url: "https://www.youtube.com/embed/VIDEO_ID_1" },
-            { title: "Pitching Drill 2", url: "https://www.youtube.com/embed/VIDEO_ID_2" }
-          ],
-          catching: [
-            { title: "Catching Basics", url: "https://www.youtube.com/embed/VIDEO_ID_3" }
-          ],
-          hitting: [
-            { title: "Hitting Mechanics", url: "https://www.youtube.com/embed/VIDEO_ID_4" }
-          ],
+          pitching: [{ title: "Pitching Drill 1", url: "https://www.youtube.com/embed/VIDEO_ID" }],
+          catching: [],
+          hitting: [],
           fielding: []
         }
       },
       {
-        id: "jordan-smith",
-        name: "Jordan Smith",
+        id: "jayden-lee",
+        name: "Jayden Lee",
         videos: {
           pitching: [],
           catching: [],
-          hitting: [
-            { title: "Tee Work Routine", url: "https://www.youtube.com/embed/VIDEO_ID_5" }
-          ],
-          fielding: [
-            { title: "Infield Footwork", url: "https://www.youtube.com/embed/VIDEO_ID_6" }
-          ]
+          hitting: [{ title: "Hitting Mechanics", url: "https://www.youtube.com/embed/VIDEO_ID" }],
+          fielding: []
         }
       }
-      // Add more players here...
     ];
-    // =====================================================
 
-    const playerListEl = document.getElementById("player-list");
-    const playerDetailEl = document.getElementById("player-detail");
-    const playerNameEl = document.getElementById("player-name");
-
-    const pitchingEl = document.getElementById("pitching-videos");
-    const catchingEl = document.getElementById("catching-videos");
-    const hittingEl = document.getElementById("hitting-videos");
-    const fieldingEl = document.getElementById("fielding-videos");
-
-    let activePlayerId = null;
-
-    // Render player list as buttons
-    function renderPlayerList() {
-      playerListEl.innerHTML = "";
-      players.forEach(player => {
-        const btn = document.createElement("button");
-        btn.textContent = player.name;
-        btn.className = "player-button";
-        btn.dataset.playerId = player.id;
-
-        btn.addEventListener("click", () => {
-          setActivePlayer(player.id);
-        });
-
-        playerListEl.appendChild(btn);
-      });
-    }
-
-    function setActivePlayer(playerId) {
-      activePlayerId = playerId;
-      const player = players.find(p => p.id === playerId);
-      if (!player) return;
-
-      // Update active button style
-      document.querySelectorAll(".player-button").forEach(btn => {
-        btn.classList.toggle("active", btn.dataset.playerId === playerId);
-      });
-
-      // Show detail section
-      playerDetailEl.style.display = "block";
-      playerNameEl.textContent = player.name;
-
-      renderVideoSection(pitchingEl, player.videos.pitching);
-      renderVideoSection(catchingEl, player.videos.catching);
-      renderVideoSection(hittingEl, player.videos.hitting);
-      renderVideoSection(fieldingEl, player.videos.fielding);
-
-      // Scroll into view nicely on mobile
-      playerDetailEl.scrollIntoView({ behavior: "smooth" });
-    }
-
-    function renderVideoSection(container, videos) {
-      container.innerHTML = "";
-
-      if (!videos || videos.length === 0) {
-        const msg = document.createElement("p");
-        msg.className = "no-videos";
-        msg.textContent = "No videos assigned yet.";
-        container.appendChild(msg);
-        return;
-      }
-
-      videos.forEach(video => {
-        const wrapper = document.createElement("div");
-        wrapper.className = "video-card";
-
-        const titleEl = document.createElement("p");
-        titleEl.textContent = video.title;
-
-        const iframe = document.createElement("iframe");
-        iframe.src = video.url;
-        iframe.allowFullscreen = true;
-
-        wrapper.appendChild(titleEl);
-        wrapper.appendChild(iframe);
-        container.appendChild(wrapper);
-      });
-    }
-
-    // Initialize
-    renderPlayerList();
-  </script>
-</body>
-</html>
+    /* ===== MAIN APP LOGIC ===== */
+    const
